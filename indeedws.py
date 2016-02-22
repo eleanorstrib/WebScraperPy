@@ -13,7 +13,7 @@ soup = bs4.BeautifulSoup(response.text, 'html.parser')
 company_ratings = {}
 company_ratings['overall'] = [float(element.get_text()) for element in soup.select('div span.cmp-average-rating')][0]
 
-rating_categories = [element.get_text() for element in soup.select('dl#cmp-reviews-attributes')]
+rating_categories = [dl.get_text() for dl in soup.select('dl#cmp-reviews-attributes dt')]
 
-
-print(rating_categories)
+print("rating_categories", rating_categories)
+print("rate_ct", rate_ct)
