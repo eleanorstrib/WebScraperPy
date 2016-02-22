@@ -1,31 +1,44 @@
 import requests
 import bs4
+
 BASE_URL = "http://www.indeed.com/cmp/"
 RATING_DENOMINATOR = 85.225
 AVAILABLE_STARS = 5
 
-company = "pinterest"
+company = "google"
 
-# this gives the response code (eg <Response [200]>)
-response = requests.get(BASE_URL + company)
+def get_soup(BASE_URL, company):
+	"""
+	Retrieve the data and parse it.
+	"""
+	response = requests.get(BASE_URL + company)
 
-soup = bs4.BeautifulSoup(response.text, 'html.parser')
+	soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
-# add data to a dict of company ratings
-company_ratings = {}
+	return soup
 
-if len(soup.select('dl#cmp-reviews-attributes dt')) != 0:
-	rating_categories = [dl.get_text() for dl in soup.select('dl#cmp-reviews-attributes dt')]
+def get_ratings(soup, company):
+	"""
+	Pull data out of the "soup" and clean to derive data for a 5 point scale
+	"""
+	company_ratings = {}
 
-	# need to grab pixel values from dom, splice, and turn into integers
-	rating_stars_raw = [span.attrs.get('style') for span in soup.select('span.cmp-star-on')]
-	rating_stars_clean = [float(item[7:-2]) for item in rating_stars_raw]
+	if len(soup.select('dl#cmp-reviews-attributes dt')) != 0:
+		company_ratings[company] = {}
+		rating_categories = [dl.get_text() for dl in soup.select('dl#cmp-reviews-attributes dt')]
 
-	for item in rating_categories:
-		company_ratings[item] = round(((rating_stars_clean[rating_categories.index(item)]/RATING_DENOMINATOR) * AVAILABLE_STARS), 1)
+		# need to grab pixel values from dom, splice, and turn into integers
+		rating_stars_raw = [span.attrs.get('style') for span in soup.select('span.cmp-star-on')]
+		rating_stars_clean = [float(item[7:-2]) for item in rating_stars_raw]
 
-	company_ratings['Overall'] = [float(element.get_text()) for element in soup.select('div span.cmp-average-rating')][0]
-	print("company_ratings", company_ratings)
-else:
-	print("There are no ratings available for %s." % company.title())
+		for item in rating_categories:
+			company_ratings[company][item] = round(((rating_stars_clean[rating_categories.index(item)]/RATING_DENOMINATOR) * AVAILABLE_STARS), 1)
 
+		company_ratings[company]['Overall'] = [float(element.get_text()) for element in soup.select('div span.cmp-average-rating')][0]
+		return company_ratings
+
+	else:
+		return ("There are no ratings available for %s." % company.title())
+
+print get_soup(BASE_URL, company)
+print get_ratings(get_soup(BASE_URL, company), company)
