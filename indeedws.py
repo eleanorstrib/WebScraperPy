@@ -11,7 +11,9 @@ soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
 # add data to a dict of company ratings
 company_ratings = {}
-company_ratings['overall'] = soup.select('div span.cmp-average-rating')
+company_ratings['overall'] = [float(element.get_text()) for element in soup.select('div span.cmp-average-rating')][0]
+
+rating_categories = [element.get_text() for element in soup.select('dl#cmp-reviews-attributes')]
 
 
-print(company_ratings)
+print(rating_categories)
